@@ -16,13 +16,14 @@ import (
 const configPath = "./config.yaml"
 
 type Cfg struct {
-	ServerPort    string `yaml:"ServerPort"`
-	ServerPortTLS string `yaml:"ServerPortTLS"`
-	CertPathCrt   string `yaml:"CertPathCrt"`
-	CertPathKey   string `yaml:"CertPathKey"`
-	EnableTLS     bool   `yaml:"EnableTLS"`
-	DisableNoTLS  bool   `yaml:"DisableNoTLS"`
-	Key           string `yaml:"Key"`
+	ServerPort                string `yaml:"ServerPort"`
+	ServerPortTLS             string `yaml:"ServerPortTLS"`
+	CertPathCrt               string `yaml:"CertPathCrt"`
+	CertPathKey               string `yaml:"CertPathKey"`
+	EnableTLS                 bool   `yaml:"EnableTLS"`
+	DisableNoTLS              bool   `yaml:"DisableNoTLS"`
+	Key                       string `yaml:"Key"`
+	DisableWOLWithoutusername bool   `yaml:"DisableWOLWithoutusername"`
 }
 
 var AppConfig Cfg
@@ -36,9 +37,10 @@ func main() {
 	if _, err := os.Stat("./sqlite-database.db"); errors.Is(err, os.ErrNotExist) {
 		CreateDB()
 	}
-
-	sendWOL := http.HandlerFunc(sendWOL)
-	http.Handle("/sendWOL", sendWOL)
+	if AppConfig.DisableWOLWithoutusername != true {
+		sendWOL := http.HandlerFunc(sendWOL)
+		http.Handle("/sendWOL", sendWOL)
+	}
 	sendWOLuser := http.HandlerFunc(sendWOLuser)
 	http.Handle("/sendWOLuser", sendWOLuser)
 	addUsrToMac := http.HandlerFunc(addUsrToMac)
@@ -65,14 +67,12 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request) {
 	if !(port == "7") && !(port == "9") {
 		port = "9"
 	}
-	//fmt.Println(mac)
 	var mac string = GetMacFromUsr(user)
 	if packet, err := NewMagicPacket(mac); err == nil {
 		packet.Send("255.255.255.255")           // send to broadcast
 		packet.SendPort("255.255.255.255", port) // specify receiving port
 		fmt.Println("Magic packet sent -> User:", user, " MAC: ", mac, " on port: ", port)
 	}
-	fmt.Printf(GetMacFromUsr(user))
 }
 func addUsrToMac(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
