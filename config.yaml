@@ -5,3 +5,4 @@ ServerPortTLS: 10443
 CertPathCrt: "./cert/full-cert.crt"
 CertPathKey: "./cert/private-key.key"
 Key: 12345
+DisableWOLWithoutusername: false
