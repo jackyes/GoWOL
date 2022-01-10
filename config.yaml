@@ -1,0 +1,7 @@
+ServerPort: 8080
+EnableTLS: false
+DisableNoTLS: false
+ServerPortTLS: 10443
+CertPathCrt: "./cert/full-cert.crt"
+CertPathKey: "./cert/private-key.key"
+Key: 12345
