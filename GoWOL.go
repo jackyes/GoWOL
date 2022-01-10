@@ -37,7 +37,7 @@ func main() {
 	if _, err := os.Stat("./sqlite-database.db"); errors.Is(err, os.ErrNotExist) {
 		CreateDB()
 	}
-	if AppConfig.DisableWOLWithoutusername != true {
+	if !AppConfig.DisableWOLWithoutusername {
 		sendWOL := http.HandlerFunc(sendWOL)
 		http.Handle("/sendWOL", sendWOL)
 	}
