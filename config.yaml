@@ -5,4 +5,4 @@ ServerPortTLS: 10443 #Https port
 CertPathCrt: "./cert/full-cert.crt"
 CertPathKey: "./cert/private-key.key"
 Key: 12345 
-DisableWOLWithoutusername: false #Allow only WOL using username (]/sendWOLuser?user=[username]) and not by MAC (sendWOL?mac=[macadress])
+DisableWOLWithoutusername: false #Allow only WOL using username (/sendWOLuser?user=[username]) and not by MAC (sendWOL?mac=[macadress])
