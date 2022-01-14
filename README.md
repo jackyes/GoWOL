@@ -20,3 +20,5 @@ http(s)://[adress]:[port]/listUsrToMac?key=[key]
 [port] see config.yaml  
   
 See config.yaml and adjust settings as need (https, etc)  
+  
+Thanks to https://github.com/linde12/gowol  
