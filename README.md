@@ -1,3 +1,4 @@
+Go App Server to send WOL (Wake on LAN) packet on LAN.  
 WOL with username (if in DB)  
 http(s)://[adress]:[port]/sendWOLuser?user=[username]  
   
