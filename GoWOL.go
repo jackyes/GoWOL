@@ -64,6 +64,10 @@ func main() {
 func sendWOLuser(w http.ResponseWriter, r *http.Request) {
 	user := r.URL.Query().Get("user")
 	port := r.URL.Query().Get("port")
+	if len(user) > 20  {
+		fmt.Println("user too long!")
+		return
+	}
 	if !(port == "7") && !(port == "9") {
 		port = "9"
 	}
@@ -84,6 +88,9 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request) {
 	user := r.URL.Query().Get("user")
 	if user == "" || mac == "" {
 		fmt.Println("Insert user and mac!")
+		return
+	} else if len(user) > 20 || len(mac) > 20 {
+		fmt.Println("user or mac too long!")
 		return
 	}
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
@@ -109,7 +116,9 @@ func remUsrToMac(w http.ResponseWriter, r *http.Request) {
 	user := r.URL.Query().Get("user")
 	if user == "" {
 		return
-	}
+	} else if len(user) > 20 {
+		return  //reject if user is too long
+	} 
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
 	checkErr(err)
 	defer db.Close()
