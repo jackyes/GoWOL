@@ -211,7 +211,7 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request) {
 		var mac string
 		err := rows.Scan(&id, &name, &mac)
 		checkErr(err)
-		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMacWithId?id="+id+"&key="+key+"\"> Remove User</a> </td><td> <a href=\"/sendWOLuser?user="+name+"\"> Send WOL packet</a> </td></tr>")
+		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMacWithId?id="+id+"&key="+key+"\"> Remove User</a> </td><td><a href=\"/remUsrToMac?user="+name+"&key="+key+"\"> Remove all with same name</a></td><td> <a href=\"/sendWOLuser?user="+name+"\"> Send WOL packet</a> </td></tr>")
 	}
 
 	p := &PageListUser{
