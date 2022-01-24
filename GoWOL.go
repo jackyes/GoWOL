@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -54,6 +55,8 @@ func main() {
 	http.Handle("/addUsrToMac", addUsrToMac)
 	remUsrToMac := http.HandlerFunc(remUsrToMac)
 	http.Handle("/remUsrToMac", remUsrToMac)
+	remUsrToMacWithId := http.HandlerFunc(remUsrToMacWithId)
+	http.Handle("/remUsrToMacWithId", remUsrToMacWithId)
 	listUsrToMac := http.HandlerFunc(listUsrToMac)
 	http.Handle("/listUsrToMac", listUsrToMac)
 	http.HandleFunc("/favicon.ico", faviconHandler)
@@ -140,7 +143,29 @@ func remUsrToMac(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		fmt.Println(res)
 	}
+}
 
+func remUsrToMacWithId(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
+	if key != AppConfig.Key {
+		fmt.Println("Wrong Key!")
+		return
+	}
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return
+	} else if len(id) > 20 || !isNumeric(id) {
+		return //reject if id is too long or not numeric
+	}
+	db, err := sql.Open("sqlite3", "sqlite-database.db")
+	checkErr(err)
+	defer db.Close()
+	checkErr(db.Ping())
+	res, err := db.Exec("DELETE from UsrToMac WHERE id = ?", id)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(res)
+	}
 }
 
 func GetMacFromUsr(user string) string {
@@ -186,7 +211,7 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request) {
 		var mac string
 		err := rows.Scan(&id, &name, &mac)
 		checkErr(err)
-		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMac?user="+name+"&key="+key+"\"> Remove User</a> </td><td> <a href=\"/sendWOLuser?user="+name+"\"> Send WOL packet</a> </td></tr>")
+		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMacWithId?id="+id+"&key="+key+"\"> Remove User</a> </td><td> <a href=\"/sendWOLuser?user="+name+"\"> Send WOL packet</a> </td></tr>")
 	}
 
 	p := &PageListUser{
@@ -301,4 +326,9 @@ func ReadConfig() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func isNumeric(s string) bool {
+	_, err := strconv.ParseFloat(s, 64)
+	return err == nil
 }
