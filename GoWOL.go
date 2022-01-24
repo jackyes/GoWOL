@@ -56,6 +56,7 @@ func main() {
 	http.Handle("/remUsrToMac", remUsrToMac)
 	listUsrToMac := http.HandlerFunc(listUsrToMac)
 	http.Handle("/listUsrToMac", listUsrToMac)
+	http.HandleFunc("/favicon.ico", faviconHandler)
 
 	http.HandleFunc("/", http.HandlerFunc(IndexHandler))
 	if !AppConfig.DisableNoTLS {
@@ -66,6 +67,10 @@ func main() {
 		fmt.Println(err)
 	}
 
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./static/favicon.ico")
 }
 
 func sendWOLuser(w http.ResponseWriter, r *http.Request) {
