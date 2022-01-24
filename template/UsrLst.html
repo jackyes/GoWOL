@@ -5,6 +5,7 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
+<h1>User List:</h1>
 <table border="3" style="width:100%">
 <tr>
 <th>id</th>
@@ -16,5 +17,16 @@
 {{range .IdUsrMac}}  {{.}}
 {{end}}
 </table>
+<br>
+<h2>Add User:</h2>
+<form action="/addUsrToMac">
+    <label for="fname">Name:</label><br>
+    <input type="text" id="user" name="user"><br>
+    <label for="lname">MAC:</label><br>
+    <input type="text" id="mac" name="mac"><br>
+    <label for="lname">Key:</label><br>
+    <input type="text" id="key" name="key"><br>
+    <input type="submit" value="Submit">
+</form> 
 </body>
 </html>
