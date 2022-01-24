@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -14,6 +15,8 @@ import (
 )
 
 const configPath = "./config.yaml"
+
+var templates = template.Must(template.ParseFiles("template/UsrLst.html"))
 
 type Cfg struct {
 	ServerPort                string `yaml:"ServerPort"`
@@ -27,6 +30,10 @@ type Cfg struct {
 }
 
 var AppConfig Cfg
+
+type PageListUser struct {
+	IdUsrMac []string
+}
 
 // MagicPacket is a slice of 102 bytes containing the magic packet data.
 type MagicPacket [102]byte
@@ -64,7 +71,7 @@ func main() {
 func sendWOLuser(w http.ResponseWriter, r *http.Request) {
 	user := r.URL.Query().Get("user")
 	port := r.URL.Query().Get("port")
-	if len(user) > 20  {
+	if len(user) > 20 {
 		fmt.Println("user too long!")
 		return
 	}
@@ -117,8 +124,8 @@ func remUsrToMac(w http.ResponseWriter, r *http.Request) {
 	if user == "" {
 		return
 	} else if len(user) > 20 {
-		return  //reject if user is too long
-	} 
+		return //reject if user is too long
+	}
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
 	checkErr(err)
 	defer db.Close()
@@ -166,22 +173,33 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT * FROM UsrToMac ORDER BY id")
 	checkErr(err)
 	defer rows.Close()
-	w.WriteHeader(200)
-	w.Write([]byte("id   name   mac\n"))
 	//5.1 Iterate through result set
+	var IdUsrMacList []string
 	for rows.Next() {
 		var id string
 		var name string
 		var mac string
 		err := rows.Scan(&id, &name, &mac)
 		checkErr(err)
-
-		w.Write([]byte(id + "   " + name + "   " + mac + " Remove link: \"/remUsrToMac?user=" + name + "&key=" + key + "\"\n"))
+		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMac?user="+name+"&key="+key+"\"> Remove User</a> </td></tr>")
 	}
+
+	p := &PageListUser{
+		IdUsrMac: IdUsrMacList,
+	}
+
+	renderTemplate(w, "UsrLst", p)
 
 	//5.2 check error, if any, that were encountered during iteration
 	err = rows.Err()
 	checkErr(err)
+}
+
+func renderTemplate(w http.ResponseWriter, tmpl string, p *PageListUser) {
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func CreateDB() {
