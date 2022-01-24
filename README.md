@@ -1,4 +1,8 @@
 Go App Server to send WOL (Wake on LAN) packet on LAN.  
+  
+A simple interface to list, add and remove user (and send WOL packet) can be found at:  
+http(s)://[adress]:[port]/listUsrToMac?key=[key]  
+  
 WOL with username (if in DB)  
 http(s)://[adress]:[port]/sendWOLuser?user=[username]  
   
