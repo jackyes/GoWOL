@@ -106,6 +106,11 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("user or mac too long!")
 		return
 	}
+	mac1, err := net.ParseMAC(mac)
+	if err != nil {
+		fmt.Println("Invalid MAC adress: ", mac1, " ", mac)
+		return
+	}
 
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
 	checkErr(err)
