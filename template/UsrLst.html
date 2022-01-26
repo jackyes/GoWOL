@@ -3,23 +3,62 @@
 <head>
 <title>Uers List</title>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <style>
+<style>
     table {
-      border-collapse: collapse;
-      width: 100%;
+        border-collapse: collapse;
+        width: 100%;
     }
     
+    th {
+        background-color: #04AAAC;
+        color: white;
+    }
+
     th, td {
-      text-align: center;
-      padding: 8px;
+        text-align: center;
+        padding: 8px;
     }
     
     tr:nth-child(even) {
-      background-color: #D6EEEE;
+        background-color: #D6EEEE;
+    }
+
+    #rcorners {
+        border-radius: 25px;
+        border: 5px solid #04AAAC;
+        padding: 20px; 
+    }
+    
+    .button {
+        background-color: #04AAAC; 
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+    }
+
+    .button1 {
+        background-color: #b4f2f3; 
+        color: black; 
+        border: 3px solid #04AAAC;
+    }
+
+    .button1:hover {
+        background-color: #04AAAC;
+        color: white;
+    }
+
+    div {
+        resize: none;
+        text-align: center;
     }
 </style>
 </head>
 <body>
+<div id="rcorners">
 <h1>User List:</h1>
 <table border="3" style="width:100%">
 <tr>
@@ -33,7 +72,9 @@
 {{range .IdUsrMac}}  {{.}}
 {{end}}
 </table>
+</div>
 <br>
+<div id="rcorners">
 <h2>Add User:</h2>
 <form action="/addUsrToMac">
     <label for="fname">Name:</label><br>
@@ -41,8 +82,9 @@
     <label for="lname">MAC:</label><br>
     <input type="text" id="mac" name="mac"><br>
     <label for="lname">Key:</label><br>
-    <input type="text" id="key" name="key"><br>
-    <input type="submit" value="Submit">
+    <input type="password" id="key" name="key"><br><br>
+    <input type="submit" class="button button1" value="Submit">
 </form> 
+</div>
 </body>
 </html>
