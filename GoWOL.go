@@ -53,8 +53,6 @@ func main() {
 	http.Handle("/sendWOLuser", sendWOLuser)
 	addUsrToMac := http.HandlerFunc(addUsrToMac)
 	http.Handle("/addUsrToMac", addUsrToMac)
-	remUsrToMac := http.HandlerFunc(remUsrToMac)
-	http.Handle("/remUsrToMac", remUsrToMac)
 	remUsrToMacWithId := http.HandlerFunc(remUsrToMacWithId)
 	http.Handle("/remUsrToMacWithId", remUsrToMacWithId)
 	listUsrToMac := http.HandlerFunc(listUsrToMac)
@@ -108,40 +106,30 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("user or mac too long!")
 		return
 	}
+
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
 	checkErr(err)
 	defer db.Close()
 	checkErr(db.Ping())
 	tx, err := db.Begin()
 	checkErr(err)
-	stmt, err := tx.Prepare("insert into UsrToMac(NAME, MAC) values(?, ?)")
-	checkErr(err)
-	defer stmt.Close()
-	_, err = stmt.Exec(user, mac)
-	checkErr(err)
-	tx.Commit()
-}
 
-func remUsrToMac(w http.ResponseWriter, r *http.Request) {
-	key := r.URL.Query().Get("key")
-	if key != AppConfig.Key {
-		fmt.Println("Wrong Key!")
-		return
-	}
-	user := r.URL.Query().Get("user")
-	if user == "" {
-		return
-	} else if len(user) > 20 {
-		return //reject if user is too long
-	}
-	db, err := sql.Open("sqlite3", "sqlite-database.db")
+	rows, err := db.Query("select mac from UsrToMac WHERE NAME = ?", user)
 	checkErr(err)
-	defer db.Close()
-	checkErr(db.Ping())
-	res, err := db.Exec("DELETE from UsrToMac WHERE NAME = ?", user)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println(res)
+	defer rows.Close()
+
+	var shouldinsert bool = true
+	for rows.Next() {
+		shouldinsert = false
+	}
+	if shouldinsert == true {
+
+		stmt, err := tx.Prepare("insert into UsrToMac(NAME, MAC) values(?, ?)")
+		checkErr(err)
+		defer stmt.Close()
+		_, err = stmt.Exec(user, mac)
+		checkErr(err)
+		tx.Commit()
 	}
 }
 
@@ -211,7 +199,7 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request) {
 		var mac string
 		err := rows.Scan(&id, &name, &mac)
 		checkErr(err)
-		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMacWithId?id="+id+"&key="+key+"\"> Remove User</a> </td><td><a href=\"/remUsrToMac?user="+name+"&key="+key+"\"> Remove all with same name</a></td><td> <a href=\"/sendWOLuser?user="+name+"\"> Send WOL packet</a> </td></tr>")
+		IdUsrMacList = append(IdUsrMacList, "<tr><td>"+id+"</td><td>"+name+"</td><td>"+mac+"</td><td> <a href=\"/remUsrToMacWithId?id="+id+"&key="+key+"\"> Remove User</a> </td><td> <a href=\"/sendWOLuser?user="+name+"\"> Send WOL packet</a> </td></tr>")
 	}
 
 	p := &PageListUser{
