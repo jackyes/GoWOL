@@ -28,6 +28,7 @@ type Cfg struct {
 	DisableNoTLS              bool   `yaml:"DisableNoTLS"`
 	Key                       string `yaml:"Key"`
 	DisableWOLWithoutusername bool   `yaml:"DisableWOLWithoutusername"`
+	AllowOnlyWolWithKey       bool   `yaml:"AllowOnlyWolWithKey"`
 }
 
 var AppConfig Cfg
@@ -67,7 +68,6 @@ func main() {
 		err := http.ListenAndServeTLS(":"+AppConfig.ServerPortTLS, AppConfig.CertPathCrt, AppConfig.CertPathKey, nil)
 		fmt.Println(err)
 	}
-
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +77,11 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 func sendWOLuser(w http.ResponseWriter, r *http.Request) {
 	user := r.URL.Query().Get("user")
 	port := r.URL.Query().Get("port")
+	key := r.URL.Query().Get("key")
+	if AppConfig.AllowOnlyWolWithKey && key != AppConfig.Key {
+		fmt.Println("Wrong Key! ", key)
+		return
+	}
 	if len(user) > 20 {
 		fmt.Println("user too long!")
 		return
@@ -85,12 +90,17 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request) {
 		port = "9"
 	}
 	var mac string = GetMacFromUsr(user)
+	SendMagicPacket(mac, port, user)
+}
+
+func SendMagicPacket(mac string, port string, user string) {
 	if packet, err := NewMagicPacket(mac); err == nil {
 		packet.Send("255.255.255.255")           // send to broadcast
 		packet.SendPort("255.255.255.255", port) // specify receiving port
 		fmt.Println("Magic packet sent -> User:", user, " MAC: ", mac, " on port: ", port)
 	}
 }
+
 func addUsrToMac(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
@@ -248,6 +258,11 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 func sendWOL(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
+	if AppConfig.AllowOnlyWolWithKey && key != AppConfig.Key {
+		fmt.Println("Wrong Key! ", key)
+		return
+	}
 	mac := r.URL.Query().Get("mac")
 	port := r.URL.Query().Get("port")
 
@@ -255,11 +270,7 @@ func sendWOL(w http.ResponseWriter, r *http.Request) {
 		port = "9"
 	}
 	//fmt.Println(mac)
-	if packet, err := NewMagicPacket(mac); err == nil {
-		packet.Send("255.255.255.255")           // send to broadcast
-		packet.SendPort("255.255.255.255", port) // specify receiving port
-		fmt.Println("Magic packet sent -> MAC: ", mac, " on port: ", port)
-	}
+	SendMagicPacket(mac, port, "-")
 }
 
 // NewMagicPacket allocates a new MagicPacket with the specified MAC.
