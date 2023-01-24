@@ -97,7 +97,7 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// Check key first to avoid unnecessary processing
 	if AppConfig.AllowOnlyWolWithKey {
 		if key != AppConfig.Key {
-			fmt.Println("Wrong Key! ", key)
+			fmt.Println("Wrong Key! ", strings.Replace(key, "\n", "", -1))
 			return
 		}
 	}
@@ -112,7 +112,7 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 	mac := GetMacFromUsr(user, db)
 	if mac == "0" {
-		fmt.Println("User not found in the database: ", user)
+		fmt.Println("User not found in the database: ", strings.Replace(user, "\n", "", -1))
 		return
 	}
 
@@ -190,7 +190,7 @@ func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	if rowsAffected == 0 {
-		log.Println("No user found with id:", id)
+		log.Println("No user found with id:", strings.Replace(id, "\n", "", -1))
 	}
 }
 
