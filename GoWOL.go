@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -122,7 +123,7 @@ func SendMagicPacket(mac string, port string, user string) {
 	if packet, err := NewMagicPacket(mac); err == nil {
 		packet.Send("255.255.255.255")           // send to broadcast
 		packet.SendPort("255.255.255.255", port) // specify receiving port
-		fmt.Println("Magic packet sent -> User:", user, " MAC: ", mac, " on port: ", port)
+		fmt.Println("Magic packet sent -> User:", strings.Replace(user, "\n", "", -1), " MAC: ", strings.Replace(mac, "\n", "", -1), " on port: ", strings.Replace(port, "\n", "", -1))
 	}
 }
 
@@ -145,7 +146,7 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// Parse MAC address before querying the database
 	mac1, err := net.ParseMAC(mac)
 	if err != nil {
-		fmt.Println("Invalid MAC adress: ", mac1, " ", mac)
+		fmt.Println("Invalid MAC adress: ", mac1, " ", strings.Replace(mac, "\n", "", -1))
 		return
 	}
 
@@ -274,7 +275,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 func sendWOL(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 	if AppConfig.AllowOnlyWolWithKey && key != AppConfig.Key {
-		fmt.Println("Wrong Key! ", key)
+		fmt.Println("Wrong Key! ", strings.Replace(key, "\n", "", -1))
 		return
 	}
 	mac := r.URL.Query().Get("mac")
