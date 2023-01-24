@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -46,18 +48,30 @@ func main() {
 	if _, err := os.Stat("./sqlite-database.db"); errors.Is(err, os.ErrNotExist) {
 		CreateDB()
 	}
+	db, err := sql.Open("sqlite3", "sqlite-database.db")
+	checkErr(err)
+	defer db.Close()
+	checkErr(db.Ping())
+
 	if !AppConfig.DisableWOLWithoutusername {
 		sendWOL := http.HandlerFunc(sendWOL)
 		http.Handle("/sendWOL", sendWOL)
 	}
-	sendWOLuser := http.HandlerFunc(sendWOLuser)
-	http.Handle("/sendWOLuser", sendWOLuser)
-	addUsrToMac := http.HandlerFunc(addUsrToMac)
-	http.Handle("/addUsrToMac", addUsrToMac)
-	remUsrToMacWithId := http.HandlerFunc(remUsrToMacWithId)
-	http.Handle("/remUsrToMacWithId", remUsrToMacWithId)
-	listUsrToMac := http.HandlerFunc(listUsrToMac)
-	http.Handle("/listUsrToMac", listUsrToMac)
+
+	http.HandleFunc("/sendWOLuser", func(w http.ResponseWriter, r *http.Request) {
+		sendWOLuser(w, r, db)
+	})
+
+	http.HandleFunc("/addUsrToMac", func(w http.ResponseWriter, r *http.Request) {
+		addUsrToMac(w, r, db)
+	})
+
+	http.HandleFunc("/remUsrToMacWithId", func(w http.ResponseWriter, r *http.Request) {
+		remUsrToMacWithId(w, r, db)
+	})
+	http.HandleFunc("/listUsrToMac", func(w http.ResponseWriter, r *http.Request) {
+		listUsrToMac(w, r, db)
+	})
 	http.HandleFunc("/favicon.ico", faviconHandler)
 
 	http.HandleFunc("/", http.HandlerFunc(IndexHandler))
@@ -74,22 +88,33 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./static/favicon.ico")
 }
 
-func sendWOLuser(w http.ResponseWriter, r *http.Request) {
+func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	user := r.URL.Query().Get("user")
 	port := r.URL.Query().Get("port")
 	key := r.URL.Query().Get("key")
-	if AppConfig.AllowOnlyWolWithKey && key != AppConfig.Key {
-		fmt.Println("Wrong Key! ", strings.Replace(key, "\n", "", -1))
-		return
+
+	// Check key first to avoid unnecessary processing
+	if AppConfig.AllowOnlyWolWithKey {
+		if key != AppConfig.Key {
+			fmt.Println("Wrong Key! ", key)
+			return
+		}
 	}
+	// Check user length before querying the database
 	if len(user) > 20 {
 		fmt.Println("user too long!")
 		return
 	}
-	if !(port == "7") && !(port == "9") {
+	// Check port before sending the packet
+	if port != "7" && port != "9" {
 		port = "9"
 	}
-	var mac string = GetMacFromUsr(user)
+	mac := GetMacFromUsr(user, db)
+	if mac == "0" {
+		fmt.Println("User not found in the database: ", user)
+		return
+	}
+
 	SendMagicPacket(mac, port, user)
 }
 
@@ -97,16 +122,17 @@ func SendMagicPacket(mac string, port string, user string) {
 	if packet, err := NewMagicPacket(mac); err == nil {
 		packet.Send("255.255.255.255")           // send to broadcast
 		packet.SendPort("255.255.255.255", port) // specify receiving port
-		fmt.Println("Magic packet sent -> User:", strings.Replace(user, "\n", "", -1), " MAC: ", strings.Replace(mac, "\n", "", -1), " on port: ", strings.Replace(port, "\n", "", -1))
+		fmt.Println("Magic packet sent -> User:", user, " MAC: ", mac, " on port: ", port)
 	}
 }
 
-func addUsrToMac(w http.ResponseWriter, r *http.Request) {
+func addUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
 		fmt.Println("Wrong Key!")
 		return
 	}
+	// Check for missing parameters and max length before querying the database
 	mac := r.URL.Query().Get("mac")
 	user := r.URL.Query().Get("user")
 	if user == "" || mac == "" {
@@ -116,71 +142,64 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("user or mac too long!")
 		return
 	}
+	// Parse MAC address before querying the database
 	mac1, err := net.ParseMAC(mac)
 	if err != nil {
-		fmt.Println("Invalid MAC adress: ", mac1, " ", strings.Replace(mac, "\n", "", -1))
+		fmt.Println("Invalid MAC adress: ", mac1, " ", mac)
 		return
 	}
 
-	db, err := sql.Open("sqlite3", "sqlite-database.db")
+	// Use a prepared statement to check for existing user
+	stmt, err := db.Prepare("select mac from UsrToMac WHERE NAME = ?")
 	checkErr(err)
-	defer db.Close()
-	checkErr(db.Ping())
-	tx, err := db.Begin()
-	checkErr(err)
-
-	rows, err := db.Query("select mac from UsrToMac WHERE NAME = ?", user)
+	defer stmt.Close()
+	rows, err := stmt.Query(user)
 	checkErr(err)
 	defer rows.Close()
 
-	var shouldinsert bool = true
-	for rows.Next() {
-		shouldinsert = false
-	}
-	if shouldinsert == true {
-
-		stmt, err := tx.Prepare("insert into UsrToMac(NAME, MAC) values(?, ?)")
+	if !rows.Next() {
+		// No existing user, insert into the database
+		stmt, err := db.Prepare("insert into UsrToMac(NAME, MAC) values(?, ?)")
 		checkErr(err)
 		defer stmt.Close()
 		_, err = stmt.Exec(user, mac)
 		checkErr(err)
-		tx.Commit()
 	}
 }
 
-func remUsrToMacWithId(w http.ResponseWriter, r *http.Request) {
+func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
 		fmt.Println("Wrong Key!")
 		return
 	}
 	id := r.URL.Query().Get("id")
-	if id == "" {
+	if id == "" || len(id) > 20 || !isNumeric(id) {
 		return
-	} else if len(id) > 20 || !isNumeric(id) {
-		return //reject if id is too long or not numeric
 	}
-	db, err := sql.Open("sqlite3", "sqlite-database.db")
-	checkErr(err)
-	defer db.Close()
-	checkErr(db.Ping())
+
 	res, err := db.Exec("DELETE from UsrToMac WHERE id = ?", id)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println(res)
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if rowsAffected == 0 {
+		log.Println("No user found with id:", id)
 	}
 }
 
-func GetMacFromUsr(user string) string {
-	db, err := sql.Open("sqlite3", "sqlite-database.db")
-	checkErr(err)
-	defer db.Close()
-	checkErr(db.Ping())
+func GetMacFromUsr(user string, db *sql.DB) string {
+
 	rows, err := db.Query("select mac from UsrToMac WHERE NAME = ?", user)
 	checkErr(err)
 	defer rows.Close()
 
-	//5.1 Iterate through result set
+	//Iterate through result set
 	for rows.Next() {
 		var mac string
 		err := rows.Scan(&mac)
@@ -188,22 +207,22 @@ func GetMacFromUsr(user string) string {
 		return mac
 	}
 
-	//5.2 check error, if any, that were encountered during iteration
+	//check error, if any, that were encountered during iteration
 	err = rows.Err()
 	checkErr(err)
 	return "0"
 }
-func listUsrToMac(w http.ResponseWriter, r *http.Request) {
+func listUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
 		fmt.Println("Wrong Key!")
 		return
 	}
-	db, err := sql.Open("sqlite3", "sqlite-database.db")
+
+	stmt, err := db.Prepare("SELECT * FROM UsrToMac ORDER BY id")
 	checkErr(err)
-	defer db.Close()
-	checkErr(db.Ping())
-	rows, err := db.Query("SELECT * FROM UsrToMac ORDER BY id")
+	defer stmt.Close()
+	rows, err := stmt.Query()
 	checkErr(err)
 	defer rows.Close()
 	//5.1 Iterate through result set
@@ -222,10 +241,6 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderTemplate(w, "UsrLst", p)
-
-	//5.2 check error, if any, that were encountered during iteration
-	err = rows.Err()
-	checkErr(err)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *PageListUser) {
@@ -239,10 +254,8 @@ func CreateDB() {
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
 	checkErr(err)
 	defer db.Close()
-	checkErr(db.Ping())
 
 	// create table
-
 	_, err = db.Exec("create table UsrToMac (ID integer NOT NULL PRIMARY KEY AUTOINCREMENT, NAME string not null, MAC string not null); delete from UsrToMac;")
 	checkErr(err)
 }
@@ -257,10 +270,11 @@ func checkErr(err error, args ...string) {
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
+
 func sendWOL(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 	if AppConfig.AllowOnlyWolWithKey && key != AppConfig.Key {
-		fmt.Println("Wrong Key! ", strings.Replace(key, "\n", "", -1))
+		fmt.Println("Wrong Key! ", key)
 		return
 	}
 	mac := r.URL.Query().Get("mac")
@@ -279,20 +293,12 @@ func NewMagicPacket(macAddr string) (packet MagicPacket, err error) {
 	if err != nil {
 		return packet, err
 	}
-
 	if len(mac) != 6 {
 		return packet, errors.New("invalid EUI-48 MAC address")
 	}
-
 	// write magic bytes to packet
 	copy(packet[0:], []byte{255, 255, 255, 255, 255, 255})
-	offset := 6
-
-	for i := 0; i < 16; i++ {
-		copy(packet[offset:], mac)
-		offset += 6
-	}
-
+	copy(packet[6:], bytes.Repeat(mac, 16))
 	return packet, nil
 }
 
