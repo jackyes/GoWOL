@@ -281,7 +281,7 @@ func sendWOL(w http.ResponseWriter, r *http.Request) {
 	mac := r.URL.Query().Get("mac")
 	port := r.URL.Query().Get("port")
 
-	if !(port == "7") && !(port == "9") {
+	if (port != "7") && (port != "9") {
 		port = "9"
 	}
 	//fmt.Println(mac)
