@@ -33,7 +33,36 @@ removes the user-MAC address pair with the specified ID from the database. The k
 ```/listUsrToMac?key=<key>``` :  
 lists all the user-MAC address pairs in the database.  
   
+## Docker  
+
+It is possible to use an image on Docker Hub with the following command:
+
+    docker run -p 8080:8080 --name gowol -v /home/user/config.yaml:/config.yaml jackyes/gowol 
+    
+`/home/user/config.yaml` is the path to your config.yaml file (copy and edit the one in this repository).  
+change the default port 8080 accordingly with the one in config.yaml if you modify it.
   
+### Build Docker image yourself  
+It is possible to create a Docker container following these steps:  
+Clone the repository  
+
+    git clone https://github.com/jackyes/GoWOL.git  
+    
+Edit the config.yaml file  
+  
+    cd GoWOL
+    nano config.yaml
+  
+Create the Docker container  
+  
+    docker build -t gowol .  
+  
+Run the container  
+  
+    docker run -p 8080:8080 gowol  
+  
+  
+
 ## Example
   
 A simple interface to list, add and remove user (and send WOL packet) can be found at:  
