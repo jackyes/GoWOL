@@ -117,6 +117,7 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	SendMagicPacket(mac, port, user)
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 func SendMagicPacket(mac string, port string, user string) {
@@ -166,6 +167,7 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		_, err = stmt.Exec(user, mac)
 		checkErr(err)
 	}
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -192,6 +194,7 @@ func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if rowsAffected == 0 {
 		log.Println("No user found with id:", strings.Replace(id, "\n", "", -1))
 	}
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 func GetMacFromUsr(user string, db *sql.DB) string {
@@ -281,11 +284,12 @@ func sendWOL(w http.ResponseWriter, r *http.Request) {
 	mac := r.URL.Query().Get("mac")
 	port := r.URL.Query().Get("port")
 
-	if (port != "7") && (port != "9") {
+	if !(port == "7") && !(port == "9") {
 		port = "9"
 	}
 	//fmt.Println(mac)
 	SendMagicPacket(mac, port, "-")
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 // NewMagicPacket allocates a new MagicPacket with the specified MAC.
