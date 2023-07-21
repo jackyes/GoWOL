@@ -14,7 +14,6 @@ import (
 	"text/template"
 
 	_ "github.com/mattn/go-sqlite3"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -85,10 +84,12 @@ func main() {
 	}
 }
 
+// faviconHandler serves the favicon file.
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./static/favicon.ico")
 }
 
+// sendWOLuser sends a Wake-on-LAN packet to the user specified in the request.
 func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	user := r.URL.Query().Get("user")
 	port := r.URL.Query().Get("port")
@@ -120,6 +121,7 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
+// SendMagicPacket sends a Wake-on-LAN packet to the specified MAC address.
 func SendMagicPacket(mac string, port string, user string) {
 	if packet, err := NewMagicPacket(mac); err == nil {
 		packet.Send("255.255.255.255")           // send to broadcast
@@ -128,6 +130,7 @@ func SendMagicPacket(mac string, port string, user string) {
 	}
 }
 
+// addUsrToMac adds a user to the MAC address specified in the request.
 func addUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
@@ -170,6 +173,7 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
+// remUsrToMacWithId removes a user from the MAC address specified in the request.
 func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
@@ -197,6 +201,7 @@ func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
+// GetMacFromUsr retrieves the MAC address associated with the specified user.
 func GetMacFromUsr(user string, db *sql.DB) string {
 
 	rows, err := db.Query("select mac from UsrToMac WHERE NAME = ?", user)
@@ -216,6 +221,8 @@ func GetMacFromUsr(user string, db *sql.DB) string {
 	checkErr(err)
 	return "0"
 }
+
+// listUsrToMac lists all users and their associated MAC addresses.
 func listUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	key := r.URL.Query().Get("key")
 	if key != AppConfig.Key {
@@ -247,6 +254,7 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	renderTemplate(w, "UsrLst", p)
 }
 
+// renderTemplate renders the specified template.
 func renderTemplate(w http.ResponseWriter, tmpl string, p *PageListUser) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
@@ -254,6 +262,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *PageListUser) {
 	}
 }
 
+// CreateDB creates the database.
 func CreateDB() {
 	db, err := sql.Open("sqlite3", "sqlite-database.db")
 	checkErr(err)
@@ -264,6 +273,7 @@ func CreateDB() {
 	checkErr(err)
 }
 
+// checkErr checks for errors and prints them if they exist.
 func checkErr(err error, args ...string) {
 	if err != nil {
 		fmt.Println("Error")
@@ -271,10 +281,12 @@ func checkErr(err error, args ...string) {
 	}
 }
 
+// IndexHandler handles requests to the root URL.
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
+// sendWOL sends a Wake-on-LAN packet.
 func sendWOL(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
 	if AppConfig.AllowOnlyWolWithKey && key != AppConfig.Key {
@@ -307,6 +319,7 @@ func NewMagicPacket(macAddr string) (packet MagicPacket, err error) {
 	return packet, nil
 }
 
+// sendUDPPacket sends a UDP packet.
 func sendUDPPacket(mp MagicPacket, addr string) (err error) {
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
@@ -328,6 +341,7 @@ func (mp MagicPacket) SendPort(addr string, port string) error {
 	return sendUDPPacket(mp, addr+":"+port)
 }
 
+// ReadConfig reads the configuration file.
 func ReadConfig() {
 	f, err := os.Open(configPath)
 	if err != nil {
@@ -343,6 +357,7 @@ func ReadConfig() {
 	}
 }
 
+// isNumeric checks if a string is numeric.
 func isNumeric(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
 	return err == nil
