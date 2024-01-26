@@ -78,11 +78,11 @@
 <h2>Add User:</h2>
 <form action="/addUsrToMac">
     <label for="fname">Name:</label><br>
-    <input type="text" id="user" name="user"><br>
+    <input type="text" id="user" name="user" required><br>
     <label for="lname">MAC:</label><br>
-    <input type="text" id="mac" name="mac"><br>
+    <input type="text" id="mac" name="mac" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$" title="Invalid MAC Address"><br>
     <label for="lname">Key:</label><br>
-    <input type="password" id="key" name="key"><br><br>
+    <input type="password" id="key" name="key" required><br><br>
     <input type="submit" class="button button1" value="Submit">
 </form> 
 </div>
