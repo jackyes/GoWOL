@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users List</title>
+    <title>📋 Users List</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         body {
@@ -25,6 +25,11 @@
             width: 90%;
             max-width: 800px;
             text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         h1, h2 {
             color: #04AAAC;
@@ -59,10 +64,11 @@
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.3s;
         }
         .button:hover {
             background-color: #028c9c;
+            transform: scale(1.05);
         }
         form {
             display: flex;
@@ -91,15 +97,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>User List</h1>
+        <h1>📋 User List</h1>
         <table>
-            <caption>UserList</caption>
+            <caption>User List</caption>
             <tr>
-                <th>id</th>
-                <th>Name</th>
-                <th>Mac</th>
-                <th>Remove link</th>
-                <th>Send WOL link</th>
+                <th>🔢 ID</th>
+                <th>👤 Name</th>
+                <th>💻 MAC</th>
+                <th>🗑️ Remove</th>
+                <th>🌐 Send WOL</th>
             </tr>
             {{range .IdUsrMac}}  {{.}}
             {{end}}
@@ -107,15 +113,15 @@
     </div>
     <br>
     <div class="container">
-        <h2>Add User</h2>
+        <h2>➕ Add User</h2>
         <form action="/addUsrToMac">
-            <label for="user">Name:</label>
+            <label for="user">👤 Name:</label>
             <input type="text" id="user" name="user" required>
-            <label for="mac">MAC:</label>
+            <label for="mac">💻 MAC:</label>
             <input type="text" id="mac" name="mac" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$" title="Invalid MAC Address">
-            <label for="key">Key:</label>
+            <label for="key">🔑 Key:</label>
             <input type="password" id="key" name="key" required>
-            <input type="submit" class="button" value="Submit">
+            <input type="submit" class="button" value="📤 Submit">
         </form>
     </div>
 </body>
