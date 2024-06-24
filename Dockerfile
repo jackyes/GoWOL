@@ -1,13 +1,18 @@
-FROM golang:alpine AS builder
+FROM golang:latest AS builder
 WORKDIR /app
 COPY . .
-RUN apk update && apk add git gcc build-base
+RUN apt update && apt install -y git gcc build-essential
 RUN go mod download
 RUN  CGO_ENABLED=1 go build -o GoWOL .
-FROM alpine:latest
-RUN apk update && apk upgrade && rm -rf /var/cache/*
+
+FROM debian:latest
+RUN apt update && apt full-upgrade -y && rm -rf /var/cache/*
 WORKDIR /root/
 COPY . .
 COPY --from=builder /app/GoWOL .
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser
+
 EXPOSE 8080
 CMD ["./GoWOL"]
