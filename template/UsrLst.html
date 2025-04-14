@@ -3,127 +3,563 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 Users List</title>
+    <title>📋 GoWOL - Users List</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+        :root {
+            --primary: #2196F3;
+            --primary-dark: #1976D2;
+            --primary-light: #BBDEFB;
+            --accent: #FF4081;
+            --text: #212121;
+            --text-secondary: #757575;
+            --background: #f5f7fa;
+            --card: #ffffff;
+            --border: #e0e0e0;
+            --success: #4CAF50;
+            --error: #F44336;
+            --warning: #FFC107;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 16px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --transition: 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
-        .container {
-            background-color: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-top: 20px;
-            width: 90%;
-            max-width: 800px;
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: var(--spacing-lg);
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
             text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
         }
-        .container:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
         }
-        h1, h2 {
-            color: #04AAAC;
+
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
         }
+
+        .card {
+            background-color: var(--card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-lg);
+            overflow: hidden;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            background-color: var(--primary);
+            color: white;
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-weight: 600;
+            border-top-left-radius: var(--radius-md);
+            border-top-right-radius: var(--radius-md);
+        }
+
+        .card-body {
+            padding: var(--spacing-lg);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin: var(--spacing-md) 0;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
         }
+
+        caption {
+            display: none;
+        }
+
         th, td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            border-radius: 5px;
+            padding: var(--spacing-md);
+            text-align: left;
         }
+
         th {
-            background-color: #04AAAC;
+            background-color: var(--primary);
             color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
         }
+
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: rgba(0, 0, 0, 0.02);
         }
+
+        tr {
+            border-bottom: 1px solid var(--border);
+            transition: background-color var(--transition);
+        }
+
         tr:hover {
-            background-color: #f1f1f1;
+            background-color: rgba(33, 150, 243, 0.05);
         }
-        .button {
-            background-color: #04AAAC;
+
+        .btn {
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            text-align: center;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
             text-decoration: none;
             display: inline-block;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
+            transition: background-color var(--transition), transform var(--transition), box-shadow var(--transition);
+            box-shadow: var(--shadow-sm);
+            margin: var(--spacing-xs);
         }
-        .button:hover {
-            background-color: #028c9c;
-            transform: scale(1.05);
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
+
+        .btn-remove {
+            background-color: var(--error);
+        }
+
+        .btn-remove:hover {
+            background-color: #D32F2F;
+        }
+
+        .btn-wol {
+            background-color: var(--success);
+        }
+
+        .btn-wol:hover {
+            background-color: #388E3C;
+        }
+
         form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
-        input[type="text"], input[type="password"] {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+
+        label {
+            margin-bottom: var(--spacing-xs);
+            font-weight: 500;
+            color: var(--text-secondary);
         }
-        input[type="submit"] {
-            margin-top: 20px;
+
+        input[type="text"], 
+        input[type="password"] {
+            padding: var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: border-color var(--transition), box-shadow var(--transition);
         }
-        @media (max-width: 600px) {
-            table, form {
+
+        input[type="text"]:focus, 
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        input[type="text"]:invalid {
+            border-color: var(--error);
+        }
+
+        .input-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        .input-error {
+            color: var(--error);
+            font-size: 0.8rem;
+            margin-top: var(--spacing-xs);
+            display: none;
+        }
+
+        input:invalid + .input-error {
+            display: block;
+        }
+
+        .submit-container {
+            margin-top: var(--spacing-md);
+            text-align: center;
+        }
+
+        .btn-submit {
+            background-color: var(--accent);
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-size: 1rem;
+            width: auto;
+            min-width: 150px;
+        }
+
+        .btn-submit:hover {
+            background-color: #EC407A;
+        }
+        
+        /* User table cells styling */
+        .cell-id {
+            width: 10%;
+            font-weight: 500;
+        }
+        
+        .cell-name {
+            width: 30%;
+        }
+        
+        .cell-mac {
+            width: 30%;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .cell-actions {
+            width: 15%;
+            text-align: center;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: var(--spacing-md);
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .card-body {
+                padding: var(--spacing-md);
+            }
+            
+            form {
                 width: 100%;
             }
-            input[type="text"], input[type="password"] {
-                width: 90%;
+        }
+        /* Notifications */
+        .notification {
+            padding: var(--spacing-md) var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-md);
+            animation: slideIn 0.3s ease-out forwards;
+            display: none;
+        }
+        
+        @keyframes slideIn {
+            0% {
+                transform: translateY(-20px);
+                opacity: 0;
             }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        
+        .notification-success {
+            background-color: var(--success);
+        }
+        
+        .notification-error {
+            background-color: var(--error);
+        }
+        
+        .notification-info {
+            background-color: var(--primary);
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity var(--transition);
+        }
+        
+        .notification-close:hover {
+            opacity: 1;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-icon {
+            margin-right: var(--spacing-md);
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📋 User List</h1>
-        <table>
-            <caption>User List</caption>
-            <tr>
-                <th>🔢 ID</th>
-                <th>👤 Name</th>
-                <th>💻 MAC</th>
-                <th>🗑️ Remove</th>
-                <th>🌐 Send WOL</th>
-            </tr>
-            {{range .IdUsrMac}}  {{.}}
-            {{end}}
-        </table>
+    <div class="app-container">
+        <!-- Notification area -->
+        <div id="notification-success" class="notification notification-success">
+            <div class="notification-icon">✓</div>
+            <div class="notification-content" id="notification-success-content">Operation successful!</div>
+            <button class="notification-close" onclick="closeNotification('notification-success')">×</button>
+        </div>
+        
+        <div id="notification-error" class="notification notification-error">
+            <div class="notification-icon">✗</div>
+            <div class="notification-content" id="notification-error-content">An error occurred.</div>
+            <button class="notification-close" onclick="closeNotification('notification-error')">×</button>
+        </div>
+        
+        <div id="notification-info" class="notification notification-info">
+            <div class="notification-icon">ℹ</div>
+            <div class="notification-content" id="notification-info-content">Information message.</div>
+            <button class="notification-close" onclick="closeNotification('notification-info')">×</button>
+        </div>
+        <header>
+            <h1>📋 GoWOL - Wake-on-LAN Manager</h1>
+        </header>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>Users List</h2>
+            </div>
+            <div class="card-body">
+                <table>
+                    <caption>User List</caption>
+                    <thead>
+                        <tr>
+                            <th class="cell-id">🔢 ID</th>
+                            <th class="cell-name">👤 Name</th>
+                            <th class="cell-mac">💻 MAC Address</th>
+                            <th class="cell-actions">🗑️ Remove</th>
+                            <th class="cell-actions">🌐 WOL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .IdUsrMac}}  {{.}}
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>➕ Add New User</h2>
+            </div>
+            <div class="card-body">
+                <form action="/addUsrToMac">
+                    <div class="form-group">
+                        <label for="user">👤 User Name</label>
+                        <input type="text" id="user" name="user" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mac">💻 MAC Address</label>
+                        <input type="text" id="mac" name="mac" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
+                        <div class="input-hint">Format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX</div>
+                        <div class="input-error">Please enter a valid MAC address (e.g., 00:1A:2B:3C:4D:5E)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="key">🔑 Access Key</label>
+                        <input type="password" id="key" name="key" required>
+                    </div>
+                    
+                    <div class="submit-container">
+                        <button type="submit" class="btn btn-submit">📤 Add User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    <br>
-    <div class="container">
-        <h2>➕ Add User</h2>
-        <form action="/addUsrToMac">
-            <label for="user">👤 Name:</label>
-            <input type="text" id="user" name="user" required>
-            <label for="mac">💻 MAC:</label>
-            <input type="text" id="mac" name="mac" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$" title="Invalid MAC Address">
-            <label for="key">🔑 Key:</label>
-            <input type="password" id="key" name="key" required>
-            <input type="submit" class="button" value="📤 Submit">
-        </form>
-    </div>
+    
+    <!-- Server-side notification initializer -->
+    {{ if .ShowNotification }}
+    <script>
+        window.serverNotification = {
+            show: true,
+            type: "{{ .NotificationType }}",
+            message: "{{ .NotificationMsg }}"
+        };
+    </script>
+    {{ else }}
+    <script>
+        window.serverNotification = {
+            show: false
+        };
+    </script>
+    {{ end }}
+    
+    <script>
+        // Simple form validation enhancement
+        document.addEventListener('DOMContentLoaded', function() {
+            const macInput = document.getElementById('mac');
+            
+            macInput.addEventListener('input', function() {
+                // Format MAC address as user types
+                let value = this.value.replace(/[^0-9a-fA-F:-]/g, '');
+                
+                // Auto-add colons if user is typing without them
+                if (!value.includes(':') && !value.includes('-')) {
+                    value = value.replace(/(.{2})(?=.)/g, '$1:');
+                }
+                
+                // Keep the value within pattern limits
+                if (value !== this.value) {
+                    this.value = value;
+                }
+            });
+            
+            // Check for server-side notifications
+            if (window.serverNotification && window.serverNotification.show) {
+                showNotification(
+                    window.serverNotification.type,
+                    window.serverNotification.message
+                );
+            } else {
+                // Fall back to URL parameter notifications
+                handleNotifications();
+            }
+        });
+        
+        // Function to show a notification
+        function showNotification(type, message) {
+            const notification = document.getElementById('notification-' + type);
+            const content = document.getElementById('notification-' + type + '-content');
+            
+            if (notification && content) {
+                content.textContent = message;
+                notification.style.display = 'flex';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.5s forwards';
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                        notification.style.animation = '';
+                    }, 500);
+                }, 5000);
+            }
+        }
+        
+        // Function to close a notification
+        function closeNotification(id) {
+            const notification = document.getElementById(id);
+            if (notification) {
+                notification.style.animation = 'fadeOut 0.5s forwards';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                    notification.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        // Function to get URL parameters
+        function getURLParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        // Function to handle notifications based on URL parameters
+        function handleNotifications() {
+            // Check URL parameters for various actions
+            const wolStatus = getURLParam('wol');
+            const action = getURLParam('action');
+            const user = getURLParam('user');
+            let hasNotification = false;
+            
+            // Wake-on-LAN notifications
+            if (wolStatus === 'success' && user) {
+                showNotification('success', `Wake-on-LAN packet successfully sent to "${user}"`);
+                hasNotification = true;
+            } else if (wolStatus === 'failed' && user) {
+                showNotification('error', `Failed to send Wake-on-LAN packet to "${user}"`);
+                hasNotification = true;
+            }
+            
+            // User management notifications
+            else if (action === 'added' && user) {
+                showNotification('success', `User "${user}" successfully added`);
+                hasNotification = true;
+            } else if (action === 'updated' && user) {
+                showNotification('success', `User "${user}" successfully updated`);
+                hasNotification = true;
+            } else if (action === 'removed' && user) {
+                showNotification('success', `User "${user}" successfully removed`);
+                hasNotification = true;
+            }
+            
+            // Clear URL parameters after handling to prevent showing notifications on page refresh
+            if (hasNotification) {
+                const url = new URL(window.location);
+                url.searchParams.delete('wol');
+                url.searchParams.delete('action');
+                url.searchParams.delete('user');
+                window.history.replaceState({}, '', url);
+            }
+        }
+    </script>
 </body>
 </html>
