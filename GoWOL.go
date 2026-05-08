@@ -1,17 +1,21 @@
-package main
+﻿package main
 
 import (
 	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"html"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
-	"text/template"
+	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -21,6 +25,79 @@ import (
 const configPath = "./config.yaml"
 
 var templates = template.Must(template.ParseFiles("template/UsrLst.html"))
+
+// Rate limiter using a sliding window per IP
+type rateLimiter struct {
+	mu       sync.Mutex
+	visitors map[string][]time.Time
+	limit    int
+	window   time.Duration
+}
+
+func newRateLimiter(limit int, window time.Duration) *rateLimiter {
+	rl := &rateLimiter{
+		visitors: make(map[string][]time.Time),
+		limit:    limit,
+		window:   window,
+	}
+	go rl.cleanup()
+	return rl
+}
+
+func (rl *rateLimiter) allow(ip string) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	now := time.Now()
+	cutoff := now.Add(-rl.window)
+
+	var recent []time.Time
+	for _, t := range rl.visitors[ip] {
+		if t.After(cutoff) {
+			recent = append(recent, t)
+		}
+	}
+
+	if len(recent) >= rl.limit {
+		rl.visitors[ip] = recent
+		return false
+	}
+
+	rl.visitors[ip] = append(recent, now)
+	return true
+}
+
+func (rl *rateLimiter) cleanup() {
+	for {
+		time.Sleep(time.Minute)
+		rl.mu.Lock()
+		cutoff := time.Now().Add(-rl.window)
+		for ip, times := range rl.visitors {
+			var recent []time.Time
+			for _, t := range times {
+				if t.After(cutoff) {
+					recent = append(recent, t)
+				}
+			}
+			if len(recent) == 0 {
+				delete(rl.visitors, ip)
+			} else {
+				rl.visitors[ip] = recent
+			}
+		}
+		rl.mu.Unlock()
+	}
+}
+
+func rateLimitMiddleware(rl *rateLimiter, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !rl.allow(r.RemoteAddr) {
+			http.Error(w, "Too many requests", http.StatusTooManyRequests)
+			return
+		}
+		next(w, r)
+	}
+}
 
 type Cfg struct {
 	ServerPort                string `yaml:"ServerPort"`
@@ -37,7 +114,7 @@ type Cfg struct {
 var AppConfig Cfg
 
 type PageListUser struct {
-	IdUsrMac         []string
+	IdUsrMac         []template.HTML
 	ShowNotification bool
 	NotificationType string
 	NotificationMsg  string
@@ -48,6 +125,9 @@ type MagicPacket [102]byte
 
 func main() {
 	ReadConfig()
+
+	limiter := newRateLimiter(30, time.Minute)
+
 	//SQL
 	if _, err := os.Stat("./sqlite-database.db"); errors.Is(err, os.ErrNotExist) {
 		CreateDB()
@@ -58,24 +138,23 @@ func main() {
 	checkErr(db.Ping())
 
 	if !AppConfig.DisableWOLWithoutusername {
-		sendWOL := http.HandlerFunc(sendWOL)
-		http.Handle("/sendWOL", sendWOL)
+		http.HandleFunc("/sendWOL", rateLimitMiddleware(limiter, sendWOL))
 	}
 
-	http.HandleFunc("/sendWOLuser", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/sendWOLuser", rateLimitMiddleware(limiter, func(w http.ResponseWriter, r *http.Request) {
 		sendWOLuser(w, r, db)
-	})
+	}))
 
-	http.HandleFunc("/addUsrToMac", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/addUsrToMac", rateLimitMiddleware(limiter, func(w http.ResponseWriter, r *http.Request) {
 		addUsrToMac(w, r, db)
-	})
+	}))
 
-	http.HandleFunc("/remUsrToMacWithId", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/remUsrToMacWithId", rateLimitMiddleware(limiter, func(w http.ResponseWriter, r *http.Request) {
 		remUsrToMacWithId(w, r, db)
-	})
-	http.HandleFunc("/listUsrToMac", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	http.HandleFunc("/listUsrToMac", rateLimitMiddleware(limiter, func(w http.ResponseWriter, r *http.Request) {
 		listUsrToMac(w, r, db)
-	})
+	}))
 	http.HandleFunc("/favicon.ico", faviconHandler)
 
 	http.HandleFunc("/", http.HandlerFunc(IndexHandler))
@@ -136,7 +215,7 @@ func sendWOLuser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		if !success {
 			status = "failed"
 		}
-		http.Redirect(w, r, "/listUsrToMac?key="+key+"&wol="+status+"&user="+user, http.StatusSeeOther)
+		http.Redirect(w, r, "/listUsrToMac?key="+key+"&wol="+status+"&user="+url.QueryEscape(user), http.StatusSeeOther)
 	}
 }
 
@@ -147,7 +226,7 @@ func SendMagicPacket(mac string, port string, user string) bool {
 		return false
 	}
 
-	err1 := packet.Send("255.255.255.255")           // send to broadcast
+	err1 := packet.Send("255.255.255.255")             // send to broadcast
 	err2 := packet.SendPort("255.255.255.255", port) // specify receiving port
 
 	if err1 != nil || err2 != nil {
@@ -209,8 +288,8 @@ func addUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		userAction = "updated"
 	}
 
-	// Redirect back to the user list page with notification
-	http.Redirect(w, r, "/listUsrToMac?key="+key+"&action="+userAction+"&user="+user, http.StatusSeeOther)
+	// Redirect back to the user list page with notification (URL-encode user for safety)
+	http.Redirect(w, r, "/listUsrToMac?key="+key+"&action="+userAction+"&user="+url.QueryEscape(user), http.StatusSeeOther)
 }
 
 func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -236,7 +315,7 @@ func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 			return
 		}
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -244,13 +323,13 @@ func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	res, err := db.Exec("DELETE from UsrToMac WHERE id = ?", id)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -260,8 +339,8 @@ func remUsrToMacWithId(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	// Redirect back to the user list page with notification
-	http.Redirect(w, r, "/listUsrToMac?key="+key+"&action=removed&user="+userName, http.StatusSeeOther)
+	// Redirect back to the user list page with notification (URL-encode userName for safety)
+	http.Redirect(w, r, "/listUsrToMac?key="+key+"&action=removed&user="+url.QueryEscape(userName), http.StatusSeeOther)
 }
 
 func GetMacFromUsr(user string, db *sql.DB) string {
@@ -298,25 +377,25 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer rows.Close()
 
 	//Iterate through result set
-	var IdUsrMacList []string
+	var IdUsrMacList []template.HTML
 	for rows.Next() {
 		var id string
 		var name string
 		var mac string
 		err := rows.Scan(&id, &name, &mac)
 		checkErr(err)
-		IdUsrMacList = append(IdUsrMacList,
-			"<tr>"+
-				"<td class=\"cell-id\">"+id+"</td>"+
-				"<td class=\"cell-name\">"+name+"</td>"+
-				"<td class=\"cell-mac\">"+mac+"</td>"+
-				"<td class=\"cell-actions\">"+
-				"<a href=\"/remUsrToMacWithId?id="+id+"&key="+key+"\" class=\"btn btn-remove\">🗑️ Remove</a>"+
-				"</td>"+
-				"<td class=\"cell-actions\">"+
-				"<a href=\"/sendWOLuser?user="+name+"&key="+key+"\" class=\"btn btn-wol\">🌐 Wake</a>"+
-				"</td>"+
-				"</tr>")
+		IdUsrMacList = append(IdUsrMacList, template.HTML(
+				"<tr>"+
+					"<td class=\"cell-id\" data-label=\"ID\">"+html.EscapeString(id)+"</td>"+
+					"<td class=\"cell-name\" data-label=\"Name\">"+html.EscapeString(name)+"</td>"+
+					"<td class=\"cell-mac\" data-label=\"MAC Address\">"+html.EscapeString(mac)+"</td>"+
+					"<td class=\"cell-actions\" data-label=\"Remove\">"+
+					"<a href=\"/remUsrToMacWithId?id="+url.QueryEscape(id)+"&key="+url.QueryEscape(key)+"\" class=\"btn btn-remove\">Remove</a>"+
+					"</td>"+
+					"<td class=\"cell-actions\" data-label=\"Wake\">"+
+					"<a href=\"/sendWOLuser?user="+url.QueryEscape(name)+"&key="+url.QueryEscape(key)+"\" class=\"btn btn-wol\">Wake</a>"+
+					"</td>"+
+					"</tr>"))
 	}
 
 	// Initialize page data
@@ -325,7 +404,7 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		ShowNotification: false,
 	}
 
-	// Check for notification parameters
+	// Check for notification parameters (escape user for safe rendering in JS context)
 	wolStatus := r.URL.Query().Get("wol")
 	action := r.URL.Query().Get("action")
 	user := r.URL.Query().Get("user")
@@ -358,7 +437,8 @@ func listUsrToMac(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 func renderTemplate(w http.ResponseWriter, tmpl string, p *PageListUser) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 }
 

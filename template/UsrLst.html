@@ -1,399 +1,594 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 GoWOL - Users List</title>
+    <title>GoWOL — Wake-on-LAN Manager</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <style>
         :root {
-            --primary: #2196F3;
-            --primary-dark: #1976D2;
-            --primary-light: #BBDEFB;
-            --accent: #FF4081;
-            --text: #212121;
-            --text-secondary: #757575;
-            --background: #f5f7fa;
-            --card: #ffffff;
-            --border: #e0e0e0;
-            --success: #4CAF50;
-            --error: #F44336;
-            --warning: #FFC107;
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
-            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            --radius-lg: 16px;
-            --spacing-xs: 4px;
-            --spacing-sm: 8px;
-            --spacing-md: 16px;
-            --spacing-lg: 24px;
-            --spacing-xl: 32px;
-            --transition: 0.3s ease;
+            --bg: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f5f6f8;
+            --bg-hover: rgba(99, 102, 241, 0.04);
+            --text: #1e1e2f;
+            --text-secondary: #64748b;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-light: #eef2ff;
+            --success: #22c55e;
+            --success-hover: #16a34a;
+            --error: #ef4444;
+            --error-hover: #dc2626;
+            --error-bg: #fef2f2;
+            --warning: #f59e0b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.2s ease;
+            --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        [data-theme="dark"] {
+            --bg: #0f0f23;
+            --bg-card: #1a1a2e;
+            --bg-input: #16213e;
+            --bg-hover: rgba(99, 102, 241, 0.08);
+            --text: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #818cf8;
+            --accent-hover: #6366f1;
+            --accent-light: #1e1b4b;
+            --success: #34d399;
+            --success-hover: #10b981;
+            --error: #f87171;
+            --error-hover: #ef4444;
+            --error-bg: #451a1a;
+            --border: #2d2d4a;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.3);
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-            background-color: var(--background);
+            font-family: var(--font);
+            background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            padding: var(--spacing-lg);
             min-height: 100vh;
-        }
-
-        header {
-            background-color: var(--primary);
-            color: white;
-            padding: var(--spacing-md) var(--spacing-lg);
-            border-radius: var(--radius-md);
-            margin-bottom: var(--spacing-lg);
-            box-shadow: var(--shadow-md);
-            text-align: center;
-            position: relative;
-        }
-
-        header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin: 0;
+            transition: background var(--transition), color var(--transition);
         }
 
         .app-container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
+            padding: 24px 20px 60px;
         }
 
-        .card {
-            background-color: var(--card);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
-            margin-bottom: var(--spacing-lg);
-            overflow: hidden;
-            transition: transform var(--transition), box-shadow var(--transition);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .card-header {
-            background-color: var(--primary);
-            color: white;
-            padding: var(--spacing-md) var(--spacing-lg);
-            font-weight: 600;
-            border-top-left-radius: var(--radius-md);
-            border-top-right-radius: var(--radius-md);
-        }
-
-        .card-body {
-            padding: var(--spacing-lg);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: var(--spacing-md) 0;
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-        }
-
-        caption {
-            display: none;
-        }
-
-        th, td {
-            padding: var(--spacing-md);
-            text-align: left;
-        }
-
-        th {
-            background-color: var(--primary);
-            color: white;
-            font-weight: 500;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-        }
-
-        tr:nth-child(even) {
-            background-color: rgba(0, 0, 0, 0.02);
-        }
-
-        tr {
-            border-bottom: 1px solid var(--border);
-            transition: background-color var(--transition);
-        }
-
-        tr:hover {
-            background-color: rgba(33, 150, 243, 0.05);
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: var(--spacing-sm) var(--spacing-md);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-block;
-            transition: background-color var(--transition), transform var(--transition), box-shadow var(--transition);
-            box-shadow: var(--shadow-sm);
-            margin: var(--spacing-xs);
-        }
-
-        .btn:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-remove {
-            background-color: var(--error);
-        }
-
-        .btn-remove:hover {
-            background-color: #D32F2F;
-        }
-
-        .btn-wol {
-            background-color: var(--success);
-        }
-
-        .btn-wol:hover {
-            background-color: #388E3C;
-        }
-
-        form {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: var(--spacing-md);
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            margin-bottom: var(--spacing-xs);
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        input[type="text"], 
-        input[type="password"] {
-            padding: var(--spacing-md);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 1rem;
-            transition: border-color var(--transition), box-shadow var(--transition);
-        }
-
-        input[type="text"]:focus, 
-        input[type="password"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
-        }
-
-        input[type="text"]:invalid {
-            border-color: var(--error);
-        }
-
-        .input-hint {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: var(--spacing-xs);
-        }
-
-        .input-error {
-            color: var(--error);
-            font-size: 0.8rem;
-            margin-top: var(--spacing-xs);
-            display: none;
-        }
-
-        input:invalid + .input-error {
-            display: block;
-        }
-
-        .submit-container {
-            margin-top: var(--spacing-md);
-            text-align: center;
-        }
-
-        .btn-submit {
-            background-color: var(--accent);
-            padding: var(--spacing-md) var(--spacing-lg);
-            font-size: 1rem;
-            width: auto;
-            min-width: 150px;
-        }
-
-        .btn-submit:hover {
-            background-color: #EC407A;
-        }
-        
-        /* User table cells styling */
-        .cell-id {
-            width: 10%;
-            font-weight: 500;
-        }
-        
-        .cell-name {
-            width: 30%;
-        }
-        
-        .cell-mac {
-            width: 30%;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-        
-        .cell-actions {
-            width: 15%;
-            text-align: center;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding: var(--spacing-md);
-            }
-            
-            table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .card-body {
-                padding: var(--spacing-md);
-            }
-            
-            form {
-                width: 100%;
-            }
-        }
-        /* Notifications */
-        .notification {
-            padding: var(--spacing-md) var(--spacing-lg);
-            margin-bottom: var(--spacing-lg);
-            border-radius: var(--radius-md);
-            color: white;
+        /* ── Header ── */
+        header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: var(--shadow-md);
-            animation: slideIn 0.3s ease-out forwards;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: background var(--transition), border var(--transition);
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            color: var(--text);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ── Theme Toggle ── */
+        .theme-toggle {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            width: 48px;
+            height: 28px;
+            cursor: pointer;
+            position: relative;
+            transition: background var(--transition), border var(--transition);
+        }
+
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            transition: transform 0.25s ease;
+        }
+
+        [data-theme="dark"] .theme-toggle::after {
+            transform: translateX(20px);
+        }
+
+        .theme-icon {
+            font-size: 1.1rem;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: var(--success-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: var(--error-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover {
+            background: var(--bg-input);
+            color: var(--text);
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: background var(--transition), border var(--transition);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        /* ── Table ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        caption { display: none; }
+
+        thead th {
+            padding: 12px 24px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-secondary);
+            background: var(--bg-input);
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition);
+        }
+
+        tbody td {
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.92rem;
+            transition: background var(--transition);
+        }
+
+        tbody tr {
+            transition: background var(--transition), box-shadow var(--transition);
+        }
+
+        tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cell-id {
+            width: 60px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .cell-name {
+            font-weight: 500;
+        }
+
+        .cell-mac {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .cell-actions {
+            width: 100px;
+            text-align: center;
+        }
+
+        .cell-actions .btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            max-width: 320px;
+            margin: 0 auto 20px;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
             display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
         }
-        
-        @keyframes slideIn {
-            0% {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-            }
+
+        .modal-overlay.active {
+            display: flex;
         }
-        
-        @keyframes fadeOut {
-            0% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-            }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            width: 90%;
+            max-width: 440px;
+            padding: 28px;
+            animation: scaleIn 0.2s ease;
         }
-        
-        .notification-success {
-            background-color: var(--success);
+
+        .modal h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text);
         }
-        
-        .notification-error {
-            background-color: var(--error);
+
+        .modal .form-group {
+            margin-bottom: 16px;
         }
-        
-        .notification-info {
-            background-color: var(--primary);
+
+        .modal label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
         }
-        
-        .notification-close {
+
+        .modal input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-input);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.92rem;
+            transition: border var(--transition), box-shadow var(--transition);
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .modal input:invalid {
+            border-color: var(--error);
+        }
+
+        .modal .input-hint {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* ── Toast Container ── */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            box-shadow: var(--shadow-lg);
+            min-width: 300px;
+            max-width: 420px;
+            pointer-events: auto;
+            animation: slideInRight 0.35s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .toast.removing {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .toast-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .toast-body {
+            flex: 1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .toast-close {
             background: none;
             border: none;
-            color: white;
-            font-size: 1.2rem;
+            color: var(--text-secondary);
             cursor: pointer;
-            opacity: 0.8;
-            transition: opacity var(--transition);
-        }
-        
-        .notification-close:hover {
-            opacity: 1;
-        }
-        
-        .notification-content {
-            flex: 1;
-        }
-        
-        .notification-icon {
-            margin-right: var(--spacing-md);
             font-size: 1.2rem;
+            padding: 0 2px;
+            line-height: 1;
+            transition: color var(--transition);
+        }
+
+        .toast-close:hover { color: var(--text); }
+
+        .toast-success { border-left: 4px solid var(--success); }
+        .toast-error   { border-left: 4px solid var(--error); }
+        .toast-info    { border-left: 4px solid var(--accent); }
+
+        /* ── Animations ── */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 14px 12px 40px;
+            }
+
+            header {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            header h1 {
+                font-size: 1.15rem;
+            }
+
+            .card-header {
+                padding: 14px 16px;
+            }
+
+            thead { display: none; }
+
+            tbody tr {
+                display: block;
+                margin: 12px 16px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                box-shadow: var(--shadow-sm);
+                background: var(--bg-card);
+            }
+
+            tbody td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 14px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            tbody td:last-child {
+                border-bottom: none;
+            }
+
+            tbody td::before {
+                content: attr(data-label);
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                flex-shrink: 0;
+                margin-right: 12px;
+            }
+
+            .cell-id, .cell-name, .cell-mac {
+                width: auto;
+            }
+
+            .cell-actions {
+                width: auto;
+                text-align: right;
+            }
+
+            .cell-actions .btn {
+                font-size: 0.8rem;
+                padding: 6px 14px;
+            }
+
+            #toast-container {
+                left: 12px;
+                right: 12px;
+                top: 12px;
+            }
+
+            .toast {
+                min-width: auto;
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Notification area -->
-        <div id="notification-success" class="notification notification-success">
-            <div class="notification-icon">✓</div>
-            <div class="notification-content" id="notification-success-content">Operation successful!</div>
-            <button class="notification-close" onclick="closeNotification('notification-success')">×</button>
-        </div>
-        
-        <div id="notification-error" class="notification notification-error">
-            <div class="notification-icon">✗</div>
-            <div class="notification-content" id="notification-error-content">An error occurred.</div>
-            <button class="notification-close" onclick="closeNotification('notification-error')">×</button>
-        </div>
-        
-        <div id="notification-info" class="notification notification-info">
-            <div class="notification-icon">ℹ</div>
-            <div class="notification-content" id="notification-info-content">Information message.</div>
-            <button class="notification-close" onclick="closeNotification('notification-info')">×</button>
-        </div>
         <header>
-            <h1>📋 GoWOL - Wake-on-LAN Manager</h1>
+            <h1>GoWOL Manager</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openModal()" aria-label="Add new user">+ Add User</button>
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="theme-icon"></span>
+                </button>
+            </div>
         </header>
-        
+
         <div class="card">
             <div class="card-header">
-                <h2>Users List</h2>
+                <h2>Users</h2>
+                <span style="font-size:0.82rem;color:var(--text-secondary)" id="user-count"></span>
             </div>
             <div class="card-body">
+                {{ if .IdUsrMac }}
                 <table>
                     <caption>User List</caption>
                     <thead>
                         <tr>
-                            <th class="cell-id">🔢 ID</th>
-                            <th class="cell-name">👤 Name</th>
-                            <th class="cell-mac">💻 MAC Address</th>
-                            <th class="cell-actions">🗑️ Remove</th>
-                            <th class="cell-actions">🌐 WOL</th>
+                            <th class="cell-id">ID</th>
+                            <th class="cell-name">Name</th>
+                            <th class="cell-mac">MAC Address</th>
+                            <th class="cell-actions" colspan="2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -401,41 +596,51 @@
                         {{end}}
                     </tbody>
                 </table>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h2>➕ Add New User</h2>
-            </div>
-            <div class="card-body">
-                <form action="/addUsrToMac">
-                    <div class="form-group">
-                        <label for="user">👤 User Name</label>
-                        <input type="text" id="user" name="user" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="mac">💻 MAC Address</label>
-                        <input type="text" id="mac" name="mac" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
-                        <div class="input-hint">Format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX</div>
-                        <div class="input-error">Please enter a valid MAC address (e.g., 00:1A:2B:3C:4D:5E)</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="key">🔑 Access Key</label>
-                        <input type="password" id="key" name="key" required>
-                    </div>
-                    
-                    <div class="submit-container">
-                        <button type="submit" class="btn btn-submit">📤 Add User</button>
-                    </div>
-                </form>
+                {{ else }}
+                <div class="empty-state">
+                    <div class="icon">🖥️</div>
+                    <h3>No users yet</h3>
+                    <p>Add your first device by clicking the &ldquo;+ Add User&rdquo; button above to start sending Wake-on-LAN packets.</p>
+                    <button class="btn btn-primary" onclick="openModal()">+ Add Your First User</button>
+                </div>
+                {{ end }}
             </div>
         </div>
     </div>
-    
-    <!-- Server-side notification initializer -->
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3>Add New Device</h3>
+            <form action="/addUsrToMac" method="GET" id="add-user-form">
+                <div class="form-group">
+                    <label for="user">Device Name</label>
+                    <input type="text" id="user" name="user" required maxlength="20" placeholder="e.g. office-pc" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="mac">MAC Address</label>
+                    <input type="text" id="mac" name="mac" pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$" placeholder="00:1A:2B:3C:4D:5E" autocomplete="off">
+                    <div class="input-hint">Format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="key">Access Key</label>
+                    <input type="password" id="key" name="key" required placeholder="Enter your access key">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Device</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Server-side notification bridge -->
     {{ if .ShowNotification }}
     <script>
         window.serverNotification = {
@@ -446,114 +651,156 @@
     </script>
     {{ else }}
     <script>
-        window.serverNotification = {
-            show: false
-        };
+        window.serverNotification = { show: false };
     </script>
     {{ end }}
-    
+
     <script>
-        // Simple form validation enhancement
-        document.addEventListener('DOMContentLoaded', function() {
-            const macInput = document.getElementById('mac');
-            
-            macInput.addEventListener('input', function() {
-                // Format MAC address as user types
-                let value = this.value.replace(/[^0-9a-fA-F:-]/g, '');
-                
-                // Auto-add colons if user is typing without them
-                if (!value.includes(':') && !value.includes('-')) {
-                    value = value.replace(/(.{2})(?=.)/g, '$1:');
+        // ═══════════ Theme Toggle ═══════════
+        (function() {
+            const saved = localStorage.getItem('gowol-theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            updateThemeIcon();
+        })();
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('gowol-theme', next);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const icon = document.querySelector('.theme-icon');
+            if (!icon) return;
+            icon.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        }
+
+        // ═══════════ Toast System ═══════════
+        function showToast(type, message) {
+            const container = document.getElementById('toast-container');
+            const icons = { success: '✓', error: '✗', info: 'ℹ' };
+
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            toast.innerHTML =
+                '<span class="toast-icon">' + (icons[type] || '') + '</span>' +
+                '<span class="toast-body">' + escapeHTML(message) + '</span>' +
+                '<button class="toast-close" onclick="dismissToast(this.parentElement)" aria-label="Close">&times;</button>';
+
+            container.appendChild(toast);
+
+            setTimeout(function() { dismissToast(toast); }, 4500);
+        }
+
+        function dismissToast(el) {
+            if (!el || el.classList.contains('removing')) return;
+            el.classList.add('removing');
+            setTimeout(function() { if (el.parentElement) el.remove(); }, 300);
+        }
+
+        function escapeHTML(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        // ═══════════ Modal ═══════════
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(function() {
+                var input = document.getElementById('user');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== document.getElementById('modal-overlay')) return;
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var overlay = document.getElementById('modal-overlay');
+                if (overlay.classList.contains('active')) {
+                    closeModal();
                 }
-                
-                // Keep the value within pattern limits
-                if (value !== this.value) {
-                    this.value = value;
-                }
-            });
-            
-            // Check for server-side notifications
-            if (window.serverNotification && window.serverNotification.show) {
-                showNotification(
-                    window.serverNotification.type,
-                    window.serverNotification.message
-                );
-            } else {
-                // Fall back to URL parameter notifications
-                handleNotifications();
             }
         });
-        
-        // Function to show a notification
-        function showNotification(type, message) {
-            const notification = document.getElementById('notification-' + type);
-            const content = document.getElementById('notification-' + type + '-content');
-            
-            if (notification && content) {
-                content.textContent = message;
-                notification.style.display = 'flex';
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    notification.style.animation = 'fadeOut 0.5s forwards';
-                    setTimeout(() => {
-                        notification.style.display = 'none';
-                        notification.style.animation = '';
-                    }, 500);
-                }, 5000);
+
+        // ═══════════ Init ═══════════
+        document.addEventListener('DOMContentLoaded', function() {
+            // MAC input auto-format
+            var macInput = document.getElementById('mac');
+            if (macInput) {
+                macInput.addEventListener('input', function() {
+                    var value = this.value.replace(/[^0-9a-fA-F:-]/g, '');
+                    if (!value.includes(':') && !value.includes('-')) {
+                        value = value.replace(/(.{2})(?=.)/g, '$1:');
+                    }
+                    this.value = value;
+                });
             }
-        }
-        
-        // Function to close a notification
-        function closeNotification(id) {
-            const notification = document.getElementById(id);
-            if (notification) {
-                notification.style.animation = 'fadeOut 0.5s forwards';
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                    notification.style.animation = '';
-                }, 500);
+
+            // User count
+            var rows = document.querySelectorAll('tbody tr');
+            var countEl = document.getElementById('user-count');
+            if (countEl && rows.length > 0) {
+                countEl.textContent = rows.length + ' device' + (rows.length !== 1 ? 's' : '');
             }
-        }
-        
-        // Function to get URL parameters
+
+            // Server-side notification
+            if (window.serverNotification && window.serverNotification.show) {
+                showToast(window.serverNotification.type, window.serverNotification.message);
+            } else {
+                handleURLNotifications();
+            }
+
+            // Pre-fill key from URL if present (for the modal form)
+            var urlKey = getURLParam('key');
+            if (urlKey) {
+                var keyInput = document.getElementById('key');
+                if (keyInput) keyInput.value = urlKey;
+            }
+        });
+
+        // ═══════════ URL Notification Handler ═══════════
         function getURLParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
+            return new URLSearchParams(window.location.search).get(param);
         }
-        
-        // Function to handle notifications based on URL parameters
-        function handleNotifications() {
-            // Check URL parameters for various actions
-            const wolStatus = getURLParam('wol');
-            const action = getURLParam('action');
-            const user = getURLParam('user');
-            let hasNotification = false;
-            
-            // Wake-on-LAN notifications
+
+        function handleURLNotifications() {
+            var wolStatus = getURLParam('wol');
+            var action = getURLParam('action');
+            var user = getURLParam('user');
+            var hasNotification = false;
+
             if (wolStatus === 'success' && user) {
-                showNotification('success', `Wake-on-LAN packet successfully sent to "${user}"`);
+                showToast('success', 'Wake-on-LAN packet sent to "' + user + '"');
                 hasNotification = true;
             } else if (wolStatus === 'failed' && user) {
-                showNotification('error', `Failed to send Wake-on-LAN packet to "${user}"`);
+                showToast('error', 'Failed to send Wake-on-LAN packet to "' + user + '"');
                 hasNotification = true;
-            }
-            
-            // User management notifications
-            else if (action === 'added' && user) {
-                showNotification('success', `User "${user}" successfully added`);
+            } else if (action === 'added' && user) {
+                showToast('success', 'User "' + user + '" added');
                 hasNotification = true;
             } else if (action === 'updated' && user) {
-                showNotification('success', `User "${user}" successfully updated`);
+                showToast('success', 'User "' + user + '" updated');
                 hasNotification = true;
             } else if (action === 'removed' && user) {
-                showNotification('success', `User "${user}" successfully removed`);
+                showToast('info', 'User "' + user + '" removed');
                 hasNotification = true;
             }
-            
-            // Clear URL parameters after handling to prevent showing notifications on page refresh
+
             if (hasNotification) {
-                const url = new URL(window.location);
+                var url = new URL(window.location);
                 url.searchParams.delete('wol');
                 url.searchParams.delete('action');
                 url.searchParams.delete('user');
